@@ -25,9 +25,9 @@ class QueueJob implements QueueJobInterface
 
     /**
      * @Column(type="string", length=256)
-     * @var QueueInterface
+     * @var QueueDriverInterface
      */
-    private $queue;
+    private $driver;
 
     /**
      * @Column(type="smallint")
@@ -152,21 +152,21 @@ class QueueJob implements QueueJobInterface
 
     /**
      * {@inheritdoc}
-     * @return QueueInterface
+     * @return QueueDriverInterface
      */
-    public function getQueue()
+    public function getDriver()
     {
-        return $this->queue;
+        return $this->driver;
     }
 
     /**
      * {@inheritdoc}
-     * @param QueueInterface $queue
+     * @param QueueDriverInterface $driver
      * @return QueueJob
      */
-    public function setQueue(QueueInterface $queue)
+    public function setDriver(QueueDriverInterface $driver)
     {
-        $this->queue = $queue;
+        $this->driver = $driver;
         return $this;
     }
 
@@ -386,13 +386,13 @@ class QueueJob implements QueueJobInterface
 
     public function countRetryJobs()
     {
-        return $this->getQueue()->countRetryJobs($this);
+        return $this->getDriver()->countRetryJobs($this);
     }
 
     public function getRetryJobs($limit = 50, $offset = 0)
     {
         if (null === $this->retryJobs) {
-            $this->retryJobs = $this->getQueue()->getRetryJobs($this, $limit, $offset);
+            $this->retryJobs = $this->getDriver()->getRetryJobs($this, $limit, $offset);
         }
         return $this->retryJobs;
     }

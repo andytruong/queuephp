@@ -246,9 +246,9 @@ interface QueueJobInterface
     public function setReviewedAt(DateTime $reviewedAt);
 
     /**
-     * @return QueueInterface
+     * @return QueueDriverInterface
      */
-    public function getQueue();
+    public function getDriver();
 
     /**
      * @return bool

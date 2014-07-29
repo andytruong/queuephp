@@ -291,6 +291,20 @@ interface QueueJobInterface
     public function isIncomplete();
 
     /**
+     * Set handler.
+     * 
+     * @param string $handler
+     */
+    public function setHandler($handler);
+
+    /**
+     * Get handler.
+     *
+     * @return string
+     */
+    public function getHandler();
+
+    /**
      * @return array
      */
     public function getParams();

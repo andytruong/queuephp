@@ -66,6 +66,13 @@ class QueueJob implements QueueJobInterface
     private $closedAt;
 
     /**
+     * Job handler, example: SendEmailHandler, or InvoiceHandler@send.
+     *
+     * @var string
+     */
+    private $handler;
+
+    /**
      * @Column(type="json_array")
      * @var array
      */
@@ -383,6 +390,24 @@ class QueueJob implements QueueJobInterface
     {
         $this->params[$name] = $value;
         return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     * @param string $handler
+     */
+    public function setHandler($handler)
+    {
+        $this->handler = $handler;
+    }
+
+    /**
+     * {@inheritdoc}
+     * @return string
+     */
+    public function getHandler()
+    {
+        return $this->handler;
     }
 
     /**

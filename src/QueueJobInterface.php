@@ -317,6 +317,7 @@ interface QueueJobInterface
 
     /**
      * Release a job.
+     * @return bool
      */
     public function release();
 

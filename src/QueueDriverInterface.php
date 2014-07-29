@@ -9,11 +9,12 @@ interface QueueDriverInterface
      * Push message to queue service.
      *
      * @param QueueJobInterface $job
+     * @return int|string|false ID of created job, false if can not push.
      */
     public function push(QueueJobInterface $job);
 
     /**
-     * Get job using ID.
+     * Get job using ID or most priority one.
      *
      * @param int|null $job_id
      * @return QueueJobInterface|null

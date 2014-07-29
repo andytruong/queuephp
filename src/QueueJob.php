@@ -3,6 +3,11 @@
 namespace AndyTruong\QueuePHP;
 
 use DateTime;
+use Doctrine\ORM\Mapping\ChangeTrackingPolicy;
+use Doctrine\ORM\Mapping\Entity;
+use Doctrine\ORM\Mapping\GeneratedValue;
+use Doctrine\ORM\Mapping\ManyToOne;
+use Doctrine\ORM\Mapping\OneToMany;
 
 /**
  * @Entity()
@@ -10,6 +15,8 @@ use DateTime;
  */
 class QueueJob implements QueueJobInterface
 {
+
+    use \AndyTruong\Serializer\SerializableTrait;
 
     /**
      * @Field(type="bigint", options = {"unsigned": true})
@@ -64,6 +71,13 @@ class QueueJob implements QueueJobInterface
      * @var DateTime
      */
     private $closedAt;
+
+    /**
+     * Job handler, example: SendEmailHandler, or InvoiceHandler@send.
+     *
+     * @var string
+     */
+    private $handler;
 
     /**
      * @Column(type="json_array")
@@ -383,6 +397,24 @@ class QueueJob implements QueueJobInterface
     {
         $this->params[$name] = $value;
         return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     * @param string $handler
+     */
+    public function setHandler($handler)
+    {
+        $this->handler = $handler;
+    }
+
+    /**
+     * {@inheritdoc}
+     * @return string
+     */
+    public function getHandler()
+    {
+        return $this->handler;
     }
 
     /**

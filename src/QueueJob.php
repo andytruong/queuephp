@@ -309,7 +309,11 @@ class QueueJob implements QueueJobInterface
         return $this;
     }
 
-    public function setOriginalJob(QueueJobInterface $originalJob)
+    /**
+     * {@inheritdoc}
+     * @param int|string|QueueJobInterface $job
+     */
+    public function setOriginalJob($originalJob)
     {
         $this->originalJob = $originalJob;
         return $this;
@@ -363,7 +367,7 @@ class QueueJob implements QueueJobInterface
         return $this->output;
     }
 
-    public function setParams($params)
+    public function setParams(array $params)
     {
         $this->params = $params;
         return $this;

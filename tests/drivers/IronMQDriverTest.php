@@ -75,16 +75,11 @@ class IronMQDriverTest extends QueuePHPTestCase
         $this->assertTrue($this->getDriver()->delete($job));
     }
 
-    /**
-     * @group WIP
-     */
     public function testRelease()
     {
         $driver = $this->getDriver();
         $job = $driver->get($this->createMessage());
-        $response = $driver->release($job);
-        print_r([__METHOD__, __LINE__, $response]);
-        exit;
+        $this->assertTrue($driver->release($job));
     }
 
     protected function tearDown()

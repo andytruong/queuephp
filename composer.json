@@ -15,7 +15,8 @@
         "php": ">=5.4.0"
     },
     "suggest": {
-        "doctrine/orm": "Use this library to enable database queue driver."
+        "doctrine/orm": "Use this library to enable database queue driver.",
+        "iron-io/iron_mq": "Use iron-io/iron_mq:~1.5.0 to enable IronMQ driver."
     },
     "autoload": {
         "psr-4": {

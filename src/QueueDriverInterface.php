@@ -15,10 +15,10 @@ interface QueueDriverInterface
     /**
      * Get job using ID.
      *
-     * @param int $job_id
-     * @return QueueJobInterface
+     * @param int|null $job_id
+     * @return QueueJobInterface|null
      */
-    public function get($job_id);
+    public function get($job_id = null);
 
     /**
      * Remove a job queue from service.
@@ -29,7 +29,7 @@ interface QueueDriverInterface
 
     /**
      * Release a job.
-     * 
+     *
      * @param QueueJobInterface $job
      */
     public function release(QueueJobInterface $job);

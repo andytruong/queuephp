@@ -1,0 +1,26 @@
+{
+    "name": "andytruong/queuephp",
+    "type": "library",
+    "description": "Just an other queue wrapper",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Andy Truong",
+            "email": "thehongtt@gmail.com",
+            "homepage": "http://v3k.net/",
+            "role": "Lead Developer"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0"
+    },
+    "suggest": {
+        "doctrine/orm": "Use this library to enable database queue driver."
+    },
+    "autoload": {
+        "psr-4": {
+            "AndyTruong\\QueuePHP\\": "src/",
+            "AndyTruong\\QueuePHP\\Driver\\": "src/drivers"
+        }
+    }
+}

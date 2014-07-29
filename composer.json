@@ -12,7 +12,8 @@
         }
     ],
     "require": {
-        "php": ">=5.4.0"
+        "php": ">=5.4.0",
+        "andytruong/serializer": "~0.1.0"
     },
     "suggest": {
         "doctrine/orm": "Use this library to enable database queue driver.",

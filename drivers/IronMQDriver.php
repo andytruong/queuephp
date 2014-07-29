@@ -52,36 +52,50 @@ class IronMQDriver implements QueueDriverInterface
         return $this->backend;
     }
 
+    /**
+     * {@inheritdoc}
+     * @param \AndyTruong\QueuePHP\QueueJobInterface $job
+     * @return int
+     */
     public function push(QueueJobInterface $job)
     {
-        $message_properties = [
-            'expires_in' => 3600 * 365, // 1 year
-            'timeout'    => $job->getMaxRuntime(),
-            'delay'      => ($future = $job->getExecuteAfter()) ? $future->getTimestamp() - time() : 0,
-        ];
+        $ids = $this->pushMultiple([$job]);
+        return reset($ids);
+    }
 
-        $message_body = json_encode([
-            'handler'     => $job->getHandler(),
-            'params'      => $job->getParams(),
-            'state'       => $job->getState(),
-            'createdAt'   => $job->getCreatedAt()->format(DATE_ISO8601),
-            'startedAt'   => ($tmp = $job->getStartedAt()) ? $tmp->format(DATE_ISO8601) : '',
-            'reviewedAt'  => ($tmp = $job->getReviewedAt()) ? $tmp->format(DATE_ISO8601) : '',
-            'closedAt'    => ($tmp = $job->getClosedAt()) ? $tmp->format(DATE_ISO8601) : '',
-            'output'      => null,
-            'errorOutput' => null,
-            'maxRetries'  => $job->getMaxRetries(),
-            'runtime'     => null,
-        ]);
+    /**
+     * {@inheritdoc}
+     * @param QueueJobInterface[] $jobs
+     * @return int[]
+     */
+    public function pushMultiple($jobs)
+    {
+        foreach ($jobs as $job) {
+            // yeah, same properties for all jobs
+            $message_properties = [
+                'expires_in' => 3600 * 365, // 1 year
+                'timeout'    => $job->getMaxRuntime(),
+                'delay'      => ($future = $job->getExecuteAfter()) ? $future->getTimestamp() - time() : 0,
+            ];
+
+            $message_bodies[] = json_encode([
+                'handler'     => $job->getHandler(),
+                'params'      => $job->getParams(),
+                'state'       => $job->getState(),
+                'createdAt'   => $job->getCreatedAt()->format(DATE_ISO8601),
+                'startedAt'   => ($tmp = $job->getStartedAt()) ? $tmp->format(DATE_ISO8601) : '',
+                'reviewedAt'  => ($tmp = $job->getReviewedAt()) ? $tmp->format(DATE_ISO8601) : '',
+                'closedAt'    => ($tmp = $job->getClosedAt()) ? $tmp->format(DATE_ISO8601) : '',
+                'output'      => null,
+                'errorOutput' => null,
+                'maxRetries'  => $job->getMaxRetries(),
+                'runtime'     => null,
+            ]);
+        }
 
         return $this
                 ->getBackend()
-                ->postMessage($this->queue_name, $message_body, $message_properties)->id;
-    }
-
-    public function pushMultiple($jobs)
-    {
-
+                ->postMessages($this->queue_name, $message_bodies, $message_properties)->ids;
     }
 
     /**

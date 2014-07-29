@@ -510,6 +510,14 @@ class QueueJob implements QueueJobInterface
     public function release()
     {
         $this->getDriver()->release($this);
+
+    /**
+     * {@inheritdoc}
+     * @return bool
+     */
+    public function delete()
+    {
+        return $this->getDriver()->delete($this);
     }
 
 }

@@ -319,4 +319,10 @@ interface QueueJobInterface
      * Release a job.
      */
     public function release();
+
+    /**
+     * Remote job from queue service.
+     * @return bool
+     */
+    public function delete();
 }

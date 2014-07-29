@@ -21,6 +21,13 @@ interface QueueDriverInterface
     public function get($job_id);
 
     /**
+     * Remove a job queue from service.
+     *
+     * @param QueueJobInterface $job
+     */
+    public function delete(QueueJobInterface $job);
+
+    /**
      * Release a job.
      * 
      * @param QueueJobInterface $job

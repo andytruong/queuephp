@@ -16,6 +16,8 @@ use Doctrine\ORM\Mapping\OneToMany;
 class QueueJob implements QueueJobInterface
 {
 
+    use \AndyTruong\Serializer\SerializableTrait;
+
     /**
      * @Field(type="bigint", options = {"unsigned": true})
      * @GeneratedValue(strategy="AUTO")

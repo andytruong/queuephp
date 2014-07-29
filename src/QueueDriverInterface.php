@@ -21,6 +21,13 @@ interface QueueDriverInterface
     public function get($job_id);
 
     /**
+     * Release a job.
+     * 
+     * @param QueueJobInterface $job
+     */
+    public function release(QueueJobInterface $job);
+
+    /**
      * Push multiple messages to queue service.
      *
      * @param QueueJobInterface[] $jobs

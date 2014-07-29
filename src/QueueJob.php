@@ -96,13 +96,13 @@ class QueueJob implements QueueJobInterface
     private $maxRetries = 0;
 
     /**
-     * @ManyToOne(targetEntity="AndyTruong\QueuePHP\QueueJob", inversedBy = "retryJobs")
+     * @ManyToOne(targetEntity="QueueJob", inversedBy = "retryJobs")
      * @var QueueJobInterface
      */
     private $originalJob;
 
     /**
-     * @OneToMany(targetEntity="AndyTruong\QueuePHP\QueueJob", mappedBy="originalJob", cascade = {"persist", "remove", "detach"})
+     * @OneToMany(targetEntity="QueueJob", mappedBy="originalJob", cascade = {"persist", "remove", "detach"})
      * @var QueueJobInterface[]
      */
     private $retryJobs;
@@ -373,12 +373,22 @@ class QueueJob implements QueueJobInterface
         return $this;
     }
 
+    /**
+     * {@inheritdoc}
+     * @param string $name
+     * @param string $value
+     * @return QueueJob
+     */
     public function addParam($name, $value)
     {
         $this->params[$name] = $value;
         return $this;
     }
 
+    /**
+     * {@inheritdoc}
+     * @return array
+     */
     public function getParams()
     {
         return $this->params;
@@ -397,46 +407,82 @@ class QueueJob implements QueueJobInterface
         return $this->retryJobs;
     }
 
+    /**
+     * {@inheritdoc}
+     * @return bool
+     */
     public function isCanceled()
     {
         return QueueJobInterface::STATE_CANCELED === $this->state;
     }
 
+    /**
+     * {@inheritdoc}
+     * @return bool
+     */
     public function isFailed()
     {
         return QueueJobInterface::STATE_FAILED === $this->state;
     }
 
+    /**
+     * {@inheritdoc}
+     * @return bool
+     */
     public function isFinished()
     {
         return QueueJobInterface::STATE_FINISHED === $this->state;
     }
 
+    /**
+     * {@inheritdoc}
+     * @return bool
+     */
     public function isIncomplete()
     {
         return QueueJobInterface::STATE_INCOMPLETE === $this->state;
     }
 
+    /**
+     * {@inheritdoc}
+     * @return bool
+     */
     public function isNew()
     {
         return QueueJobInterface::STATE_NEW === $this->state;
     }
 
+    /**
+     * {@inheritdoc}
+     * @return bool
+     */
     public function isPending()
     {
         return QueueJobInterface::STATE_PENDING === $this->state;
     }
 
+    /**
+     * {@inheritdoc}
+     * @return bool
+     */
     public function isRunning()
     {
         return QueueJobInterface::STATE_RUNNING === $this->state;
     }
 
+    /**
+     * {@inheritdoc}
+     * @return bool
+     */
     public function isTerminated()
     {
         return QueueJobInterface::STATE_TERMINATED === $this->state;
     }
 
+    /**
+     * {@inheritdoc}
+     * @return bool
+     */
     public function isStartable()
     {
         $startable = false;
@@ -444,6 +490,10 @@ class QueueJob implements QueueJobInterface
         return $startable;
     }
 
+    /**
+     * {@inheritdoc}
+     * @return bool
+     */
     public function isRetryAllowed()
     {
         return $this->getMaxRetries() > 0;
@@ -452,6 +502,14 @@ class QueueJob implements QueueJobInterface
     public function __toString()
     {
 
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function release()
+    {
+        $this->getDriver()->release($this);
     }
 
 }

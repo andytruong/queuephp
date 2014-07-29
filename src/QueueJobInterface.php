@@ -314,4 +314,9 @@ interface QueueJobInterface
      * @return string
      */
     public function __toString();
+
+    /**
+     * Release a job.
+     */
+    public function release();
 }

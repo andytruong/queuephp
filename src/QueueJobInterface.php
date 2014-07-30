@@ -292,7 +292,7 @@ interface QueueJobInterface
 
     /**
      * Set handler.
-     * 
+     *
      * @param string $handler
      */
     public function setHandler($handler);
@@ -315,6 +315,22 @@ interface QueueJobInterface
      * @param array $params
      */
     public function setParams(array $params);
+
+    /**
+     * There's service provide extra attributes for a job, for example: SQS
+     * provide 'Receipt Handles', this is requried to delete/… a job.
+     *
+     * @param string $name
+     * @param mixed $value
+     */
+    public function setAttribute($name, $value);
+
+    /**
+     * Get extra attribute by name.
+     *
+     * @param string $name
+     */
+    public function getAttribute($name);
 
     /**
      * Add params.

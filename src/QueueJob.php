@@ -86,6 +86,13 @@ class QueueJob implements QueueJobInterface
     private $params;
 
     /**
+     * @Column(type="json_array", nullable=true)
+     * @var array
+     * @see QueueJobInterface::setAttribute()
+     */
+    private $attributes;
+
+    /**
      * @Column(type="text", nullable=true)
      * @var string
      */
@@ -424,6 +431,28 @@ class QueueJob implements QueueJobInterface
     public function getParams()
     {
         return $this->params;
+    }
+
+    /**
+     * {@inheritdoc}
+     * @param string $name
+     * @param mixed $value
+     * @return QueueJob
+     */
+    public function setAttribute($name, $value)
+    {
+        $this->attributes[$name] = $value;
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     * @param string $name
+     * @return mixed
+     */
+    public function getAttribute($name)
+    {
+        return isset($this->attributes[$name]) ? $this->attributes[$name] : null;
     }
 
     public function countRetryJobs()

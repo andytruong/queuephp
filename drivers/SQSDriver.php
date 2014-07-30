@@ -3,6 +3,7 @@
 namespace AndyTruong\QueuePHP\Driver;
 
 use AndyTruong\QueuePHP\QueueDriverInterface;
+use AndyTruong\QueuePHP\QueueJob;
 use AndyTruong\QueuePHP\QueueJobInterface;
 use Aws\Sqs\SqsClient;
 use RuntimeException;
@@ -103,7 +104,32 @@ class SQSDriver implements QueueDriverInterface
 
     public function get($job_id = null)
     {
-        // return $this->getBackend()->
+        // SQS does not allow get message by ID?
+        /* @var $response \Guzzle\Service\Resource\Model */
+        $response = $this->getBackend()->receiveMessage([
+            'QueueUrl'            => $this->queueUrl,
+            'MaxNumberOfMessages' => 1
+        ]);
+
+        $message = $response->get('Messages')[0];
+        $message['Body'] = json_decode($message['Body'], true);
+
+        foreach (['createdAt', 'startedAt', 'reviewedAt', 'closedAt'] as $key) {
+            if (empty($message['Body'][$key])) {
+                unset($message['Body'][$key]);
+            }
+            else {
+                $message['Body'][$key] = date_create_from_format(DATE_ISO8601, $message['Body'][$key]);
+            }
+        }
+
+
+        return QueueJob::fromArray([
+                'id'         => $message['MessageId'],
+                'attributes' => [
+                    'MD5OfBody'     => $message['ReceiptHandle'],
+                    'ReceiptHandle' => $message['ReceiptHandle']]
+                ] + $message['Body']);
     }
 
     public function countRetryJobs(QueueJobInterface $job)

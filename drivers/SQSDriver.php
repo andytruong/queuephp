@@ -6,6 +6,7 @@ use AndyTruong\QueuePHP\QueueDriverInterface;
 use AndyTruong\QueuePHP\QueueJob;
 use AndyTruong\QueuePHP\QueueJobInterface;
 use Aws\Sqs\SqsClient;
+use Guzzle\Service\Resource\Model;
 use RuntimeException;
 
 /**
@@ -62,26 +63,8 @@ class SQSDriver implements QueueDriverInterface
      */
     public function push(QueueJobInterface $job)
     {
-        $args = [
-            'QueueUrl'     => $this->queueUrl,
-            'DelaySeconds' => ($tmp = $job->getExecuteAfter()) ? $tmp->getTimestamp() - time() : 0,
-            'MessageBody'  => json_encode([
-                'handler'     => $job->getHandler(),
-                'params'      => $job->getParams(),
-                'state'       => $job->getState(),
-                'createdAt'   => $job->getCreatedAt()->format(DATE_ISO8601),
-                'startedAt'   => ($tmp = $job->getStartedAt()) ? $tmp->format(DATE_ISO8601) : '',
-                'reviewedAt'  => ($tmp = $job->getReviewedAt()) ? $tmp->format(DATE_ISO8601) : '',
-                'closedAt'    => ($tmp = $job->getClosedAt()) ? $tmp->format(DATE_ISO8601) : '',
-                'output'      => null,
-                'errorOutput' => null,
-                'maxRetries'  => $job->getMaxRetries(),
-                'runtime'     => null,
-            ]),
-        ];
-
-        // \Guzzle\Service\Resource\Model->get($key)
-        return $this->getBackend()->sendMessage($args)->get('MessageId');
+        $ids = $this->pushMultiple([$job]);
+        return reset($ids);
     }
 
     /**
@@ -91,28 +74,58 @@ class SQSDriver implements QueueDriverInterface
      */
     public function pushMultiple($jobs)
     {
-        $ids = [];
-
-        foreach ($jobs as $job) {
-            // @WHY $this->getBackend()->sendMessageBatch() requires message ID
-            // for each item, even when they are not created :/
-            $ids[] = $this->push($job);
+        $args = ['QueueUrl' => $this->queueUrl, 'Entries' => []];
+        foreach ($jobs as $index => $job) {
+            $args['Entries'][] = [
+                'Id'                => $index,
+                'DelaySeconds'      => ($tmp = $job->getExecuteAfter()) ? $tmp->getTimestamp() - time() : 0,
+                'MessageBody'       => json_encode([
+                    'handler' => $job->getHandler(),
+                    'params'  => $job->getParams()
+                ]),
+                'MessageAttributes' => [
+                    'state'       => ['DataType' => 'String', 'StringValue' => $job->getState()],
+                    'maxRetries'  => ['DataType' => 'String', 'StringValue' => $job->getMaxRetries()],
+                    'createdAt'   => ['DataType' => 'String', 'StringValue' => $job->getCreatedAt()->format(DATE_ISO8601)],
+                    'startedAt'   => ['DataType' => 'String', 'StringValue' => $job->getStartedAt()->format(DATE_ISO8601)],
+                    'reviewedAt'  => ['DataType' => 'String', 'StringValue' => $job->getReviewedAt()->format(DATE_ISO8601)],
+                    'closedAt'    => ['DataType' => 'String', 'StringValue' => $job->getClosedAt()->format(DATE_ISO8601)],
+                    'output'      => ['DataType' => 'String', 'StringValue' => '<blank />'],
+                    'errorOutput' => ['DataType' => 'String', 'StringValue' => '<blank />'],
+                    'runtime'     => ['DataType' => 'String', 'StringValue' => '<blank />'],
+                ]
+            ];
         }
 
+        /* @var $response \Guzzle\Service\Resource\Model */
+        $ids = [];
+        $response = $this->getBackend()->sendMessageBatch($args);
+        $results = $response->get('Successful');
+        if ($results) {
+            foreach ($results as $result) {
+                $ids[] = $result['MessageId'];
+            }
+        }
         return $ids;
     }
 
     public function get($job_id = null)
     {
         // SQS does not allow get message by ID?
-        /* @var $response \Guzzle\Service\Resource\Model */
+        /* @var $response Model */
         $response = $this->getBackend()->receiveMessage([
-            'QueueUrl'            => $this->queueUrl,
-            'MaxNumberOfMessages' => 1
+            'QueueUrl'              => $this->queueUrl,
+            'MaxNumberOfMessages'   => 1,
+            'AttributeNames'        => ['Sent', 'ReceiveCount', 'MessageAttributeCount'],
+            'MessageAttributeNames' => ['state', 'maxRetries', 'createdAt', 'startedAt', 'reviewedAt', 'closedAt', 'output', 'errorOutput', 'runtime']
         ]);
 
         $message = $response->get('Messages')[0];
         $message['Body'] = json_decode($message['Body'], true);
+
+        foreach ($response['MessageAttributes'] as $pty => $info) {
+            $message['Body'][$pty] = $info['StringValue'];
+        }
 
         foreach (['createdAt', 'startedAt', 'reviewedAt', 'closedAt'] as $key) {
             if (empty($message['Body'][$key])) {
@@ -122,7 +135,6 @@ class SQSDriver implements QueueDriverInterface
                 $message['Body'][$key] = date_create_from_format(DATE_ISO8601, $message['Body'][$key]);
             }
         }
-
 
         return QueueJob::fromArray([
                 'id'         => $message['MessageId'],
@@ -142,14 +154,56 @@ class SQSDriver implements QueueDriverInterface
 
     }
 
+    /**
+     * {@inheritdoc}
+     * @param QueueJobInterface $job
+     * @return boolean
+     */
     public function delete(QueueJobInterface $job)
     {
-
+        return $this->getBackend()->deleteMessage([
+                'QueueUrl'      => $this->queueUrl,
+                'ReceiptHandle' => $job->getAttribute('ReceiptHandle')
+            ]) instanceof Model;
     }
 
     public function getRetryJobs(QueueJobInterface $job, $limit = 50, $offset = 0)
     {
 
+    }
+
+    public function debug(QueueJobInterface $job)
+    {
+        $response = $this->getBackend()->sendMessageBatch([
+            'QueueUrl' => $this->queueUrl,
+            'Entries'  => [
+                [
+                    'Id'                => 'CanThisBeAnyThing', // $job->getId(),
+                    'MessageBody'       => json_encode([
+                        'handler'     => $job->getHandler(),
+                        'params'      => $job->getParams(),
+                        'state'       => $job->getState(),
+                        'createdAt'   => $job->getCreatedAt()->format(DATE_ISO8601),
+                        'startedAt'   => ($tmp = $job->getStartedAt()) ? $tmp->format(DATE_ISO8601) : '',
+                        'reviewedAt'  => ($tmp = $job->getReviewedAt()) ? $tmp->format(DATE_ISO8601) : '',
+                        'closedAt'    => ($tmp = $job->getClosedAt()) ? $tmp->format(DATE_ISO8601) : '',
+                        'output'      => null,
+                        'errorOutput' => null,
+                        'maxRetries'  => $job->getMaxRetries(),
+                        'runtime'     => null,
+                    ]),
+                    'MessageAttributes' => [
+                        'Foo' => [
+                            'DataType'    => 'String',
+                            'StringValue' => 'Foo Value…'
+                        ]
+                    ]
+                ]
+            ]
+        ]);
+
+        print_r([__METHOD__, __LINE__, $response]);
+        exit;
     }
 
 }

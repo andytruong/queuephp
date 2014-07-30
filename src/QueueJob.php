@@ -226,7 +226,7 @@ class QueueJob implements QueueJobInterface
      */
     public function getStartedAt()
     {
-        return $this->startedAt;
+        return null !== $this->startedAt ? $this->startedAt : new DateTime();
     }
 
     /**
@@ -235,7 +235,7 @@ class QueueJob implements QueueJobInterface
      */
     public function getReviewedAt()
     {
-        return $this->reviewedAt;
+        return null !== $this->reviewedAt ? $this->reviewedAt : new DateTime();
     }
 
     /**
@@ -244,7 +244,7 @@ class QueueJob implements QueueJobInterface
      */
     public function getExecuteAfter()
     {
-        return $this->executeAfter;
+        return null !== $this->executeAfter ? $this->executeAfter : new DateTime();
     }
 
     /**
@@ -253,7 +253,7 @@ class QueueJob implements QueueJobInterface
      */
     public function getClosedAt()
     {
-        return $this->closedAt;
+        return null !== $this->closedAt ? $this->closedAt : new DateTime();
     }
 
     /**
@@ -431,6 +431,16 @@ class QueueJob implements QueueJobInterface
     public function getParams()
     {
         return $this->params;
+    }
+
+    /**
+     * @param array $attributes
+     */
+    public function setAttributes($attributes)
+    {
+        foreach ($attributes as $name => $value) {
+            $this->setAttribute($name, $value);
+        }
     }
 
     /**

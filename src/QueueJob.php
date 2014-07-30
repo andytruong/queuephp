@@ -86,6 +86,13 @@ class QueueJob implements QueueJobInterface
     private $params;
 
     /**
+     * @Column(type="json_array", nullable=true)
+     * @var array
+     * @see QueueJobInterface::setAttribute()
+     */
+    private $attributes;
+
+    /**
      * @Column(type="text", nullable=true)
      * @var string
      */
@@ -219,7 +226,7 @@ class QueueJob implements QueueJobInterface
      */
     public function getStartedAt()
     {
-        return $this->startedAt;
+        return null !== $this->startedAt ? $this->startedAt : new DateTime();
     }
 
     /**
@@ -228,7 +235,7 @@ class QueueJob implements QueueJobInterface
      */
     public function getReviewedAt()
     {
-        return $this->reviewedAt;
+        return null !== $this->reviewedAt ? $this->reviewedAt : new DateTime();
     }
 
     /**
@@ -237,7 +244,7 @@ class QueueJob implements QueueJobInterface
      */
     public function getExecuteAfter()
     {
-        return $this->executeAfter;
+        return null !== $this->executeAfter ? $this->executeAfter : new DateTime();
     }
 
     /**
@@ -246,7 +253,7 @@ class QueueJob implements QueueJobInterface
      */
     public function getClosedAt()
     {
-        return $this->closedAt;
+        return null !== $this->closedAt ? $this->closedAt : new DateTime();
     }
 
     /**
@@ -424,6 +431,38 @@ class QueueJob implements QueueJobInterface
     public function getParams()
     {
         return $this->params;
+    }
+
+    /**
+     * @param array $attributes
+     */
+    public function setAttributes($attributes)
+    {
+        foreach ($attributes as $name => $value) {
+            $this->setAttribute($name, $value);
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     * @param string $name
+     * @param mixed $value
+     * @return QueueJob
+     */
+    public function setAttribute($name, $value)
+    {
+        $this->attributes[$name] = $value;
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     * @param string $name
+     * @return mixed
+     */
+    public function getAttribute($name)
+    {
+        return isset($this->attributes[$name]) ? $this->attributes[$name] : null;
     }
 
     public function countRetryJobs()
